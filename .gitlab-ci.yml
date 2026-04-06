@@ -1,0 +1,50 @@
+stages:
+  - test
+  - build
+  - docker
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+cache:
+  paths:
+    - .m2/repository
+
+before_script:
+  - git clone https://github.com/SatoshiJr1/product-core.git /tmp/product-core
+  - cd /tmp/product-core && mvn install -DskipTests -q
+  - cd $CI_PROJECT_DIR
+
+test:
+  stage: test
+  image: maven:3.9-eclipse-temurin-21
+  script:
+    - mvn test
+  only:
+    - develop
+
+build:
+  stage: build
+  image: maven:3.9-eclipse-temurin-21
+  script:
+    - mvn clean package -DskipTests
+  artifacts:
+    paths:
+      - target/*.jar
+  only:
+    - develop
+
+docker:
+  stage: docker
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script: []
+  script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+    - docker build -t $DOCKER_IMAGE .
+    - docker push $DOCKER_IMAGE
+  dependencies:
+    - build
+  only:
+    - develop

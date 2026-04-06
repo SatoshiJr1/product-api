@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: product-api-config
+  namespace: devops-l3gl
+data:
+  SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/product_db
+  SPRING_DATASOURCE_USERNAME: root
+  SPRING_JPA_HIBERNATE_DDL_AUTO: update
+  SPRING_JPA_SHOW_SQL: "true"
+  SERVER_PORT: "8086"
+  SPRING_APPLICATION_NAME: product-api
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus,metrics
+  MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED: "true"
+  MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
+  MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED: "true"
+  MANAGEMENT_HEALTH_READINESSSTATE_ENABLED: "true"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-api
+  namespace: devops-l3gl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-api
+  template:
+    metadata:
+      labels:
+        app: product-api
+    spec:
+      containers:
+        - name: product-api
+          image: satoshijr/product-api:latest
+          ports:
+            - containerPort: 8086
+          envFrom:
+            - configMapRef:
+                name: product-api-config
+          env:
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-root-password
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "250Mi"
+            limits:
+              cpu: "400m"
+              memory: "500Mi"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8086
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8086
+            initialDelaySeconds: 60
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-api
+  namespace: devops-l3gl
+spec:
+  type: ClusterIP
+  selector:
+    app: product-api
+  ports:
+    - port: 8086
+      targetPort: 8086
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: product-api-ingress
+  namespace: devops-l3gl
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: product-api
+                port:
+                  number: 8086

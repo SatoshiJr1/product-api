@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 10s
+
+scrape_configs:
+  - job_name: 'product-api'
+    metrics_path: '/l3gl/actuator/prometheus'
+    static_configs:
+      - targets: ['<ADRESSE-IP-VM1>:80']
