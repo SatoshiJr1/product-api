@@ -5,4 +5,4 @@ scrape_configs:
   - job_name: 'product-api'
     metrics_path: '/l3gl/actuator/prometheus'
     static_configs:
-      - targets: ['<ADRESSE-IP-VM1>:80']
+      - targets: ['13.60.179.34:80']

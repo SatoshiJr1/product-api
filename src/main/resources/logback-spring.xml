@@ -9,7 +9,7 @@
 
     <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
         <http>
-            <url>http://<ADRESSE-IP-VM2>:3100/loki/api/v1/push</url>
+            <url>http://13.50.110.128:3100/loki/api/v1/push</url>
         </http>
         <format>
             <label>
