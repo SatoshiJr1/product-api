@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="product-api"/>
+
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%-5level [%thread] %logger{36} - %msg%n</pattern>
@@ -13,7 +15,7 @@
         </http>
         <format>
             <label>
-                <pattern>app=${spring.application.name}</pattern>
+                <pattern>app=${appName}</pattern>
             </label>
             <message>
                 <pattern>%-5level [%thread] %logger{36} - %msg%n</pattern>
